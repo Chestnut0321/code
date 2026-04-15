@@ -114,7 +114,7 @@ int main() {
 				outFile.precision(2); 
 
 				random_initialFun(Pduration, Prevenue, distance, Pdemand, Scapacity, price, Srisk, budget, Goverfs, Budgetsav);
-				//1.定义变量
+				//1.Define variables
 				IloEnv env;
 				try {
 					IloModel model(env);
@@ -230,13 +230,13 @@ int main() {
 							costOtherSum += YYik[i][k] * (AC[k] + BC[k]);
 						}
 					}
-					//2.目标函数
-					//目标函数 1
+					//2.Objective function
+					//Objective function 1
 					//profitSum = revenueSum - costProcurementSum - costInveSum - costOtherSum;
 					profitSum = revenueSum - costFtranSum - costNFtranSum - costPurchaseSum - costInveSum - costOtherSum;
 					IloRange rngC(env, profitSum);
 
-					//目标函数 2
+					//Objective function 2
 					
 					for (IloInt i = 0; i < nbProject; i++) {
 						for (IloInt j = 0; j < nbSupplier; j++) {
@@ -252,8 +252,8 @@ int main() {
 					model.add(obj);
 
 					//Constraints
-					// 3. 核心约束
-					// 项目执行约束：每个项目最多执行一次
+					// 3. Core constraint
+					// Project execution constraint: Each project can be executed at most once
 					for (int i = 0; i < nbProject; i++) {
 						IloExpr sum(env);
 						for (int t = 0; t < nbPeriod; t++) sum += Xit[i][t];
@@ -261,7 +261,7 @@ int main() {
 						sum.end();
 					}
 
-					// 资源需求约束
+					// Resource demand constraint
 					for (int i = 0; i < nbProject; i++)
 						for (int k = 0; k < nbResource; k++) {
 							IloExpr sum(env);
@@ -270,39 +270,38 @@ int main() {
 							sum.end();
 						}
 
-					// 4. 双目标求解（核心逻辑）
+					// 4. Dual-objective solution (Core Logic)
 					IloCplex cplex(model);
 					cplex.setParam(IloCplex::TiLim, TIME_LIMIT);
 
-					// 第一步：最大化利润
+					// The first step: Maximize profits
 					IloObjective obj1 = IloMaximize(env, profit);
 					model.add(obj1);
 					cplex.solve();
 					double maxProfit = cplex.getObjValue();
 
-					// 第二步：最小化风险（固定利润）
+					// Step 2: Minimize risk (Fixed profit)
 					model.remove(obj1);
-					model.add(profit >= maxProfit * 0.95);  // 利润不低于最大值的95%
 					IloObjective obj2 = IloMinimize(env, risk);
 					model.add(obj2);
 					cplex.solve();
 
-					// 输出核心结果
-					resuFinal << "实例: " << nbProject << "项目-" << nbSupplier << "供应商: " << T + 1 << endl;
-					resuFinal << "最大利润: " << maxProfit << " | 最小风险: " << cplex.getObjValue() << endl;
+					// Output the core results
+					resuFinal << "Example: " << nbProject << "project-" << nbSupplier << "supplier: " << T + 1 << endl;
+					resuFinal << "Maximum profit: " << maxProfit << " | Maximum profit: " << cplex.getObjValue() << endl;
 
 				}
 				catch (IloException& e) {
-					cerr << "CPLEX异常: " << e << endl;
+					cerr << "CPLEX Abnormal: " << e << endl;
 				}
 				catch (...) {
-					cerr << "未知异常" << endl;
+					cerr << "Unknown anomaly" << endl;
 				}
 				env.end();
 				dataFile.close();
 			}
 
-			// 释放内存
+			// Release memory
 			for (int i = 0; i < nbSupplier; i++) {
 				delete[] Scapacity[i];
 				delete[] price[i];
